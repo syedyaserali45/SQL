@@ -4,13 +4,30 @@
    Shot 3/4: mysql terminal style (real output from the verified run)
 """
 import re
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
-MONO_B = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
+BASE_DIR = Path(__file__).resolve().parent
+SCREENSHOTS_DIR = BASE_DIR / "screenshots"
+SCREENSHOTS_DIR.mkdir(exist_ok=True)
+
+FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
+    "C:/Windows/Fonts/consola.ttf",
+    "C:/Windows/Fonts/consolab.ttf",
+    "C:/Windows/Fonts/cour.ttf",
+    "C:/Windows/Fonts/courbd.ttf",
+]
+
 
 def F(size, bold=False):
-    return ImageFont.truetype(MONO_B if bold else MONO, size)
+    for path in (FONT_CANDIDATES[1] if bold else FONT_CANDIDATES[0],
+                 *([FONT_CANDIDATES[2], FONT_CANDIDATES[3], FONT_CANDIDATES[4], FONT_CANDIDATES[5]])):
+        candidate = Path(path) if not path.startswith("/") else Path(path)
+        if candidate.exists():
+            return ImageFont.truetype(str(candidate), size)
+    return ImageFont.load_default()
 
 BG      = "#1e1e2e"
 TITLEBG = "#11111b"
@@ -168,7 +185,7 @@ def block(kind, lines):
     return [(kind, l) for l in lines]
 
 # =====================================================================
-SQL = open("/home/user/sql_data_cleaning_analysis.sql").read().splitlines()
+SQL = (BASE_DIR / "sql_data_cleaning_analysis.sql").read_text(encoding="utf-8").splitlines()
 
 def line_of(prefix):
     for i, l in enumerate(SQL):
@@ -193,7 +210,7 @@ items = (
     + gap()
     + numbered("-- 2.5 Duplicate order ids", "-- 2.6 Invalid quantities")
 )
-render_code("/home/user/screenshots/shot1_audit_queries.png",
+render_code(str(SCREENSHOTS_DIR / "shot1_audit_queries.png"),
             "sql_data_cleaning_analysis.sql", items)
 
 # =====================================================================
@@ -211,7 +228,7 @@ items = (
     + numbered("-- 4b. Build the clean order table", "DROP TABLE tmp_orders_dedup;")
 )
 items = [it for it in items if not (it[0] is not None and it[1].startswith("DROP TABLE tmp_orders_dedup"))]
-render_code("/home/user/screenshots/shot2_cleaning_logic.png",
+render_code(str(SCREENSHOTS_DIR / "shot2_cleaning_logic.png"),
             "sql_data_cleaning_analysis.sql", items)
 
 # =====================================================================
@@ -248,7 +265,7 @@ blocks = [
     block("prompt", ["SELECT customer_id, full_name, email, phone, city, signup_date FROM clean_customers;"]),
     table(["customer_id", "full_name", "email", "phone", "city", "signup_date"], cust),
 ]
-render_terminal("/home/user/screenshots/shot3_quality_report.png",
+render_terminal(str(SCREENSHOTS_DIR / "shot3_quality_report.png"),
                 "MySQL 8.0 — query results", blocks)
 
 # =====================================================================
@@ -300,5 +317,5 @@ blocks = [
     + table(["customers_with_orders", "repeat_customers", "repeat_purchase_pct"],
             [("9", "8", "88.9")]),
 ]
-render_terminal("/home/user/screenshots/shot4_analysis_results.png",
+render_terminal(str(SCREENSHOTS_DIR / "shot4_analysis_results.png"),
                 "MySQL 8.0 — analysis queries", blocks)

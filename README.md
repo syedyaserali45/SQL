@@ -32,15 +32,36 @@ The script in `sql_data_cleaning_analysis.sql` does the following:
 
 ## How to run
 
-1. Make sure MySQL 8.0+ is installed.
-2. Open a terminal in this project folder.
-3. Run:
+### Option 1: MySQL or MariaDB locally
 
-```bash
-mysql -u <username> -p < sql_data_cleaning_analysis.sql
+1. Start a local MySQL/MariaDB server.
+2. Open PowerShell in this project folder.
+3. Add the database client to `PATH` if needed.
+4. Run the script:
+
+```powershell
+$env:Path += ";C:\Program Files\MariaDB 13.0\bin"
+Get-Content .\sql_data_cleaning_analysis.sql | mariadb --batch --skip-column-names -u root
+```
+
+If you are using MySQL instead of MariaDB, replace the path with your MySQL install, for example:
+
+```powershell
+$env:Path += ";C:\Program Files\MySQL\MySQL Server 8.4\bin"
+Get-Content .\sql_data_cleaning_analysis.sql | mysql -u root -p
 ```
 
 The script creates and uses the `demo_ecommerce` schema and is designed to be re-run safely.
+
+### Option 2: Generate the project screenshots
+
+From the project directory:
+
+```powershell
+python .\make_shots.py
+```
+
+This regenerates the PNG files under the `screenshots/` folder.
 
 ## Example outputs
 
